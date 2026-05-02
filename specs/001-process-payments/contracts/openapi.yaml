@@ -1,0 +1,106 @@
+openapi: "3.0.1"
+info:
+  title: Payment Processing Service API
+  version: 1.0.0
+  description: API to submit payments and query status. Uses `Idempotency-Key` header for de-dup.
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /payments:
+    post:
+      summary: Submit a payment request
+      description: Accepts a payment request, persists it, and queues it for processing.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '202':
+          description: Accepted for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResource'
+        '200':
+          description: Request already exists (Idempotent)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResource'
+
+  /payments/{paymentId}:
+    get:
+      summary: Get payment status
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResource'
+        '404':
+          description: Not found
+
+components:
+  schemas:
+    PaymentRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+          example: USD
+        payerId:
+          type: string
+        payeeId:
+          type: string
+        metadata:
+          type: object
+      required:
+        - amount
+        - currency
+
+    PaymentResource:
+      type: object
+      properties:
+        id:
+          type: string
+        idempotencyKey:
+          type: string
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [received, processing, completed, failed]
+        attemptCount:
+          type: integer
+        externalResponse:
+          type: object
+        failureReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time

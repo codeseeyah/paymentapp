@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: paymentapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  payment-simulator:
+    image: paymentapp-simulator:local
+    environment:
+      SIMULATOR_MIN_DELAY_MS: "10"
+      SIMULATOR_MAX_DELAY_MS: "2000"
+      SIMULATOR_FAILURE_RATE: "0.1"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres

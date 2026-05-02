@@ -1,0 +1,106 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: paymentapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  simulator:
+    build: .
+    environment:
+      SPRING_PROFILES_ACTIVE: simulator
+      SERVER_PORT: 8081
+      PAYMENT_SIMULATOR_MIN_DELAY_MS: "10"
+      PAYMENT_SIMULATOR_MAX_DELAY_MS: "2000"
+      PAYMENT_SIMULATOR_FAILURE_RATE: "0.1"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+
+  producer-1:
+    build: .
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      PAYMENT_SIMULATOR_URL: http://simulator:8081/simulate
+      PAYMENT_WORKER_SCHEDULED: "false"
+    depends_on:
+      - postgres
+      - simulator
+
+  producer-2:
+    build: .
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      PAYMENT_SIMULATOR_URL: http://simulator:8081/simulate
+      PAYMENT_WORKER_SCHEDULED: "false"
+    depends_on:
+      - postgres
+      - simulator
+
+  worker-1:
+    build: .
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 0
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      PAYMENT_SIMULATOR_URL: http://simulator:8081/simulate
+      PAYMENT_WORKER_SCHEDULED: "true"
+    depends_on:
+      - postgres
+      - simulator
+
+  worker-2:
+    build: .
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 0
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      PAYMENT_SIMULATOR_URL: http://simulator:8081/simulate
+      PAYMENT_WORKER_SCHEDULED: "true"
+    depends_on:
+      - postgres
+      - simulator
+
+  nginx:
+    image: nginx:1.25
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./perf/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - producer-1
+      - producer-2
+
+  k6:
+    image: grafana/k6:0.49.0
+    volumes:
+      - ./perf:/perf:ro
+    environment:
+      API_BASE_URL: http://nginx:8080
+      VUS: "100"
+      DURATION: "60s"
+    command: ["run", "/perf/k6-producers.js"]
+    depends_on:
+      - nginx

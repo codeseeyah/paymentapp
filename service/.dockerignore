@@ -1,0 +1,19 @@
+.git/
+.idea/
+.vscode/
+
+# Build outputs
+**/target/
+**/build/
+**/out/
+
+# Env/logs
+**/*.log*
+.env*
+
+# Performance assets
+perf/
+
+# Misc
+**/*.tmp
+**/*.swp

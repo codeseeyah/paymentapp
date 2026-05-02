@@ -1,0 +1,43 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/paymentapp}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+payment:
+  external:
+    base-url: ${PAYMENT_SIMULATOR_URL:http://localhost:8081/simulate}
+    connect-timeout-ms: 1000
+    read-timeout-ms: 3000
+  worker:
+    batch-size: 10
+    poll-interval-ms: 500
+    lease-timeout-ms: 30000
+    scheduled: true
+  retry:
+    base-delay-ms: 200
+    multiplier: 2.0
+    jitter-min: 0.5
+    jitter-max: 1.0
+    max-attempts: 5
+
+  simulator:
+    min-delay-ms: 10
+    max-delay-ms: 2000
+    failure-rate: 0.1

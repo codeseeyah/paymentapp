@@ -1,0 +1,17 @@
+.git/
+.idea/
+.vscode/
+
+# Build outputs
+**/target/
+**/build/
+**/out/
+
+# Env/logs
+**/*.log*
+.env*
+
+# Misc
+**/*.tmp
+**/*.swp
+coverage/
