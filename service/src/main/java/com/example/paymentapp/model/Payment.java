@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "payments")
@@ -43,6 +45,7 @@ public class Payment {
   @Column(name = "last_attempted_at")
   private OffsetDateTime lastAttemptedAt;
 
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "external_response", columnDefinition = "jsonb")
   private String externalResponse;
 
