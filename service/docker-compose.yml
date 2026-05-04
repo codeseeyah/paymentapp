@@ -7,6 +7,8 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -14,12 +16,37 @@ services:
       retries: 5
 
   payment-simulator:
+    build: .
     image: paymentapp-simulator:local
+    command: ["java", "-jar", "/app/paymentapp.jar", "--spring.profiles.active=simulator", "--server.port=8081"]
     environment:
       SIMULATOR_MIN_DELAY_MS: "10"
       SIMULATOR_MAX_DELAY_MS: "2000"
       SIMULATOR_FAILURE_RATE: "0.1"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
     ports:
       - "8081:8081"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+
+  paymentapp:
+    build: .
+    command: ["java", "-jar", "/app/paymentapp.jar", "--spring.profiles.active=local"]
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+      payment-simulator:
+        condition: service_started
+
+volumes:
+  postgres-data:

@@ -50,6 +50,7 @@ public class OutboxWorker {
   }
 
   @Scheduled(fixedDelayString = "${payment.worker.poll-interval-ms:500}")
+  @Transactional
   public void scheduledPoll() {
     if (!workerProperties.isScheduled()) {
       return;
@@ -57,6 +58,7 @@ public class OutboxWorker {
     processOnce();
   }
 
+  @Transactional
   public void processOnce() {
     List<OutboxClaim> claims = claimBatch(workerProperties.getBatchSize());
     for (OutboxClaim claim : claims) {
@@ -90,7 +92,7 @@ public class OutboxWorker {
               row.getAttemptCount()));
     }
     outboxRepository.saveAll(rows);
-    paymentRepository.saveAll(payments);
+    // paymentRepository.saveAll(payments);
     return claims;
   }
 
@@ -117,10 +119,13 @@ public class OutboxWorker {
 
     Payment payment = paymentOpt.get();
     Outbox outbox = outboxOpt.get();
+    if (outbox.getStatus() == OutboxStatus.DONE) {
+      return;
+    }
     payment.setStatus(PaymentStatus.COMPLETED);
     payment.setAttemptCount(payment.getAttemptCount() + 1);
     payment.setLastAttemptedAt(OffsetDateTime.now());
-    payment.setExternalResponse(response);
+    payment.setExternalResponse(toJsonStringLiteral(response));
 
     outbox.setStatus(OutboxStatus.DONE);
 
@@ -139,6 +144,9 @@ public class OutboxWorker {
 
     Payment payment = paymentOpt.get();
     Outbox outbox = outboxOpt.get();
+    if (outbox.getStatus() == OutboxStatus.FAILED) {
+      return;
+    }
     int attempt = claim.attemptCount();
     boolean exhausted = attempt >= retryProperties.getMaxAttempts();
 
@@ -184,4 +192,8 @@ public class OutboxWorker {
       String idempotencyKey,
       String payload,
       int attemptCount) {}
+
+  private String toJsonStringLiteral(String value) {
+    return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+  }
 }

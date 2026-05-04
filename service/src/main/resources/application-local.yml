@@ -15,6 +15,13 @@ spring:
     enabled: true
 
 management:
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
   endpoints:
     web:
       exposure:

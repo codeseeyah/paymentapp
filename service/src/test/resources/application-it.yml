@@ -16,3 +16,16 @@ payment:
     lease-timeout-ms: 1000
   retry:
     max-attempts: 3
+
+management:
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
