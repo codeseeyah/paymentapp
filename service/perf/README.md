@@ -3,9 +3,18 @@
 Prereqs:
 
 - k6 installed
-- App running on `http://localhost:8080`
-- Simulator running on `http://localhost:8081`
-- PostgreSQL available at `postgresql://postgres:postgres@localhost:5432/paymentapp-test`
+- PostgreSQL, simulator and payment application running via containerization (recommended) or locally
+
+### Running via containerization (Recommended): 
+Start the required services by running the following command in ./service:
+- For single instance: docker compose -f docker-compose.test.yml up
+- For multi instance with N producers and M workers: docker compose -f docker-compose.scale.test.yml up --scale producer=N --scale worker=M
+
+To close services after tests:
+- For single instance: docker compose -f docker-compose.test.yml down
+- For multi instance: docker compose -f docker-compose.scale.test.yml down
+
+## Producer Tests:
 
 Single instance:
 
@@ -13,7 +22,7 @@ Single instance:
 k6 run perf/k6-single.js
 ```
 
-Multi instance (start 3 app instances on different ports and point load to a load balancer or one instance):
+Multi instance (start N producer instances on different ports and point load to a load balancer or one instance):
 
 ```bash
 k6 run perf/k6-multi.js
@@ -25,7 +34,7 @@ Override defaults:
 VUS=200 DURATION=120s API_BASE_URL=http://localhost:8080 k6 run perf/k6-single.js
 ```
 
-Worker outbox completion metrics:
+## Worker/Outbox Completion Tests:
 
 ```bash
 ./perf/run-worker-metrics.sh
@@ -51,16 +60,4 @@ Compare two worker runs with different loads by changing the backlog size or wor
 ```bash
 WORKER_RUN_LABEL=baseline WORKER_BACKLOG_SIZE=100 ./perf/run-worker-metrics.sh
 WORKER_RUN_LABEL=larger-load WORKER_BACKLOG_SIZE=500 ./perf/run-worker-metrics.sh
-```
-
-Use the producer scenario when you want request-generation load only:
-
-```bash
-k6 run perf/k6-producers.js
-```
-
-Use the worker scenario when you want backlog drain time and completion counts from PostgreSQL:
-
-```bash
-./perf/run-worker-metrics.sh
 ```

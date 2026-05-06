@@ -24,7 +24,8 @@ services:
       PAYMENT_SIMULATOR_MIN_DELAY_MS: "10"
       PAYMENT_SIMULATOR_MAX_DELAY_MS: "2000"
       PAYMENT_SIMULATOR_FAILURE_RATE: "0.05"
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp-test
+      # Route DB traffic through PgBouncer for pooled connections
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pgbouncer:6432/paymentapp-test
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
     ports:
@@ -37,9 +38,10 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: local
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp-test
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pgbouncer:6432/paymentapp-test
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "5"
       PAYMENT_SIMULATOR_URL: http://payment-simulator:8081/simulate
       PAYMENT_WORKER_SCHEDULED: "false"
     depends_on:
@@ -51,9 +53,10 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: local
       SERVER_PORT: 0
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp-test
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pgbouncer:6432/paymentapp-test
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "5"
       PAYMENT_SIMULATOR_URL: http://payment-simulator:8081/simulate
       PAYMENT_WORKER_SCHEDULED: "true"
     depends_on:
@@ -69,5 +72,20 @@ services:
     depends_on:
       - producer
       - payment-simulator
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    depends_on:
+      - postgres
+    ports:
+      - "6432:6432"
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h postgres -p 6432 -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes: {}

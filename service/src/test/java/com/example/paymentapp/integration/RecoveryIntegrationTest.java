@@ -86,7 +86,6 @@ class RecoveryIntegrationTest {
 
     Outbox outbox = new Outbox();
     outbox.setPayment(payment);
-    outbox.setPayload("{\"amount\":20.00,\"currency\":\"USD\"}");
     outbox.setStatus(OutboxStatus.PENDING);
     outbox.setAttemptCount(0);
     outbox.setNextAttemptAt(OffsetDateTime.now());

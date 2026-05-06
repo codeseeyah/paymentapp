@@ -10,7 +10,6 @@ import com.example.paymentapp.dto.PaymentRequest;
 import com.example.paymentapp.model.Payment;
 import com.example.paymentapp.repository.OutboxRepository;
 import com.example.paymentapp.repository.PaymentRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -19,9 +18,7 @@ import org.mockito.Mockito;
 class PaymentServiceTest {
   private final PaymentRepository paymentRepository = Mockito.mock(PaymentRepository.class);
   private final OutboxRepository outboxRepository = Mockito.mock(OutboxRepository.class);
-  private final ObjectMapper objectMapper = new ObjectMapper();
-  private final PaymentService paymentService =
-      new PaymentService(paymentRepository, outboxRepository, objectMapper);
+  private final PaymentService paymentService = new PaymentService(paymentRepository, outboxRepository);
 
   @Test
   void createAndQueuePaymentCreatesOutboxWhenNew() {
