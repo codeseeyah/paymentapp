@@ -1,0 +1,1 @@
+GET http://localhost:8080/payments/bcc5c979-4a10-4e03-8629-714ef95f2524

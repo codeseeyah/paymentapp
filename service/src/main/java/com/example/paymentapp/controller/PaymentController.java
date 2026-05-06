@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/payments")
@@ -51,5 +54,16 @@ public class PaymentController {
     return payment
         .map(value -> ResponseEntity.ok(PaymentResource.fromPayment(value)))
         .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  @GetMapping
+  public ResponseEntity<List<PaymentResource>> listPayments(
+          @RequestParam(defaultValue = "50") int limit) {
+      List<PaymentResource> payments = paymentRepository.findAll(
+              PageRequest.of(0, Math.min(limit, 200)))
+              .stream()
+              .map(PaymentResource::fromPayment)
+              .toList();
+      return ResponseEntity.ok(payments);
   }
 }

@@ -3,6 +3,8 @@ package com.example.paymentapp.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -22,7 +24,7 @@ class HealthMetricsTest {
   @Container
   static final PostgreSQLContainer<?> POSTGRES =
       new PostgreSQLContainer<>("postgres:15")
-          .withDatabaseName("paymentapp")
+            .withDatabaseName("paymentapp-test")
           .withUsername("postgres")
           .withPassword("postgres");
 
@@ -34,6 +36,12 @@ class HealthMetricsTest {
   }
 
   @Autowired private TestRestTemplate restTemplate;
+  @Autowired private JdbcTemplate jdbcTemplate;
+
+  @BeforeEach
+  void cleanDb() {
+    jdbcTemplate.update("TRUNCATE TABLE outbox, payments CASCADE;");
+  }
 
   @Test
   void prometheusEndpointExposesOutboxMetrics() {

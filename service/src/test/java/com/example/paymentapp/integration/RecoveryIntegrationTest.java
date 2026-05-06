@@ -16,6 +16,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,7 +35,7 @@ class RecoveryIntegrationTest {
   @Container
   static final PostgreSQLContainer<?> POSTGRES =
       new PostgreSQLContainer<>("postgres:15")
-          .withDatabaseName("paymentapp")
+          .withDatabaseName("paymentapp-test")
           .withUsername("postgres")
           .withPassword("postgres");
 
@@ -65,6 +66,11 @@ class RecoveryIntegrationTest {
   @Autowired private PaymentRepository paymentRepository;
   @Autowired private OutboxRepository outboxRepository;
   @Autowired private JdbcTemplate jdbcTemplate;
+
+  @BeforeEach
+  void cleanDb() {
+    jdbcTemplate.update("TRUNCATE TABLE outbox, payments CASCADE;");
+  }
 
   @Test
   void staleProcessingRowIsReclaimed() {
