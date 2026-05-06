@@ -27,5 +27,5 @@ export default function () {
   check(res, {
     'status is 202 or 200': (r) => r.status === 202 || r.status === 200,
   });
-  sleep(0.05);
+  sleep(0.1);
 }

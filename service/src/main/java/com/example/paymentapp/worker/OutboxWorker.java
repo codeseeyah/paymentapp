@@ -92,7 +92,7 @@ public class OutboxWorker {
               row.getAttemptCount()));
     }
     outboxRepository.saveAll(rows);
-    // paymentRepository.saveAll(payments);
+    paymentRepository.saveAll(payments);
     return claims;
   }
 

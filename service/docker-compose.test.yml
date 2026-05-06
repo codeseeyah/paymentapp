@@ -2,13 +2,14 @@ services:
   postgres:
     image: postgres:15
     environment:
-      POSTGRES_DB: paymentapp
+      POSTGRES_DB: paymentapp-test
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
+    volumes: []
+    tmpfs:
+      - /var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -23,7 +24,7 @@ services:
       SIMULATOR_MIN_DELAY_MS: "10"
       SIMULATOR_MAX_DELAY_MS: "2000"
       SIMULATOR_FAILURE_RATE: "0.05"
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp-test
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
     ports:
@@ -39,7 +40,8 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp
+      PAYMENT_SIMULATOR_URL: http://payment-simulator:8081/simulate
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentapp-test
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
     depends_on:
@@ -48,5 +50,4 @@ services:
       payment-simulator:
         condition: service_started
 
-volumes:
-  postgres-data:
+volumes: {}

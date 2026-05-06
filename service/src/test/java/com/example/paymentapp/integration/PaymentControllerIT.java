@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -24,12 +25,16 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @ActiveProfiles("it")
 class PaymentControllerIT {
 	@Container
-	static final PostgreSQLContainer<?> POSTGRES =
-			new PostgreSQLContainer<>("postgres:15")
-					.withDatabaseName("paymentapp")
+	    static final PostgreSQLContainer<?> POSTGRES =
+		    new PostgreSQLContainer<>("postgres:15")
+			    .withDatabaseName("paymentapp-test")
 					.withUsername("postgres")
 					.withPassword("postgres");
 
+	    @BeforeEach
+	    void cleanDb() {
+		jdbcTemplate.update("TRUNCATE TABLE outbox, payments CASCADE;");
+	    }
 	@DynamicPropertySource
 	static void registerDataSource(DynamicPropertyRegistry registry) {
 		registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
