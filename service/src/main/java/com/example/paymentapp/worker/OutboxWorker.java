@@ -2,6 +2,7 @@ package com.example.paymentapp.worker;
 
 import com.example.paymentapp.client.ExternalPaymentClient;
 import com.example.paymentapp.client.ExternalPaymentException;
+import com.example.paymentapp.dto.PaymentRequest;
 import com.example.paymentapp.config.PaymentRetryProperties;
 import com.example.paymentapp.config.PaymentWorkerProperties;
 import com.example.paymentapp.model.Outbox;
@@ -12,6 +13,8 @@ import com.example.paymentapp.metrics.OutboxMetrics;
 import com.example.paymentapp.service.BackoffCalculator;
 import com.example.paymentapp.service.OutboxStatus;
 import com.example.paymentapp.service.PaymentStatus;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +33,7 @@ public class OutboxWorker {
   private final PaymentRetryProperties retryProperties;
   private final PaymentWorkerProperties workerProperties;
   private final OutboxMetrics outboxMetrics;
+  private final ObjectMapper objectMapper;
   private final String workerId = UUID.randomUUID().toString();
 
   public OutboxWorker(
@@ -39,7 +43,8 @@ public class OutboxWorker {
       BackoffCalculator backoffCalculator,
       PaymentRetryProperties retryProperties,
       PaymentWorkerProperties workerProperties,
-      OutboxMetrics outboxMetrics) {
+      OutboxMetrics outboxMetrics,
+      ObjectMapper objectMapper) {
     this.outboxRepository = outboxRepository;
     this.paymentRepository = paymentRepository;
     this.externalPaymentClient = externalPaymentClient;
@@ -47,6 +52,7 @@ public class OutboxWorker {
     this.retryProperties = retryProperties;
     this.workerProperties = workerProperties;
     this.outboxMetrics = outboxMetrics;
+    this.objectMapper = objectMapper;
   }
 
   @Scheduled(fixedDelayString = "${payment.worker.poll-interval-ms:500}")
@@ -83,12 +89,13 @@ public class OutboxWorker {
       payment.setStatus(PaymentStatus.PROCESSING);
       payment.setLastAttemptedAt(now);
       payments.add(payment);
+      String payload = toJson(paymentToRequest(payment));
       claims.add(
           new OutboxClaim(
               row.getId(),
               payment.getId(),
               payment.getIdempotencyKey(),
-              row.getPayload(),
+              payload,
               row.getAttemptCount()));
     }
     outboxRepository.saveAll(rows);
@@ -192,6 +199,23 @@ public class OutboxWorker {
       String idempotencyKey,
       String payload,
       int attemptCount) {}
+
+  private PaymentRequest paymentToRequest(Payment payment) {
+    PaymentRequest request = new PaymentRequest();
+    request.setAmount(payment.getAmount());
+    request.setCurrency(payment.getCurrency());
+    request.setPayerId(payment.getPayerId());
+    request.setPayeeId(payment.getPayeeId());
+    return request;
+  }
+
+  private String toJson(PaymentRequest request) {
+    try {
+      return objectMapper.writeValueAsString(request);
+    } catch (JsonProcessingException ex) {
+      throw new IllegalStateException("Failed to serialize payment request", ex);
+    }
+  }
 
   private String toJsonStringLiteral(String value) {
     return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";

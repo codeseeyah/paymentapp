@@ -5,11 +5,8 @@ import com.example.paymentapp.model.Outbox;
 import com.example.paymentapp.model.Payment;
 import com.example.paymentapp.repository.OutboxRepository;
 import com.example.paymentapp.repository.PaymentRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
 import java.util.Optional;
-import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,15 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentService {
   private final PaymentRepository paymentRepository;
   private final OutboxRepository outboxRepository;
-  private final ObjectMapper objectMapper;
 
-  public PaymentService(
-      PaymentRepository paymentRepository,
-      OutboxRepository outboxRepository,
-      ObjectMapper objectMapper) {
+  public PaymentService(PaymentRepository paymentRepository, OutboxRepository outboxRepository) {
     this.paymentRepository = paymentRepository;
     this.outboxRepository = outboxRepository;
-    this.objectMapper = objectMapper;
   }
 
   @Transactional
@@ -49,7 +41,6 @@ public class PaymentService {
       payment = paymentRepository.save(payment);
       Outbox outbox = new Outbox();
       outbox.setPayment(payment);
-      outbox.setPayload(toJson(request));
       outbox.setStatus(OutboxStatus.PENDING);
       outbox.setAttemptCount(0);
       outbox.setNextAttemptAt(OffsetDateTime.now());
@@ -61,14 +52,6 @@ public class PaymentService {
         return new PaymentCreateResult(afterConflict.get(), false);
       }
       throw ex;
-    }
-  }
-
-  private String toJson(PaymentRequest request) {
-    try {
-      return objectMapper.writeValueAsString(request);
-    } catch (JsonProcessingException ex) {
-      throw new IllegalStateException("Failed to serialize payment request", ex);
     }
   }
 

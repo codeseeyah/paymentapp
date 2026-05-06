@@ -1,0 +1,2 @@
+ALTER TABLE outbox
+  DROP COLUMN IF EXISTS payload;

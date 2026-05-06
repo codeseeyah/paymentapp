@@ -12,8 +12,6 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 
 @Entity
@@ -27,10 +25,6 @@ public class Outbox {
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "payment_id", nullable = false)
   private Payment payment;
-
-  @JdbcTypeCode(SqlTypes.JSON)
-  @Column(columnDefinition = "jsonb", nullable = false)
-  private String payload;
 
   @Column(nullable = false, length = 16)
   private String status;
@@ -75,14 +69,6 @@ public class Outbox {
 
   public void setPayment(Payment payment) {
     this.payment = payment;
-  }
-
-  public String getPayload() {
-    return payload;
-  }
-
-  public void setPayload(String payload) {
-    this.payload = payload;
   }
 
   public String getStatus() {
