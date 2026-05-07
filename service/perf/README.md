@@ -7,12 +7,24 @@ Prereqs:
 
 ### Running via containerization (Recommended): 
 Start the required services by running the following command in ./service:
-- For single instance: docker compose -f docker-compose.test.yml up
-- For multi instance with N producers and M workers: docker compose -f docker-compose.scale.test.yml up --scale producer=N --scale worker=M
+- For single instance:
+  ```bash
+  docker compose -f docker-compose.test.yml up
+  ```
+- For multi instance with N producers and M workers:
+  ```bash
+  docker compose -f docker-compose.scale.test.yml up --scale producer=N --scale worker=M
+  ```
 
 To close services after tests:
-- For single instance: docker compose -f docker-compose.test.yml down
-- For multi instance: docker compose -f docker-compose.scale.test.yml down
+- For single instance:
+  ```bash
+  docker compose -f docker-compose.test.yml down
+  ```
+- For multi instance:
+  ```bash
+  docker compose -f docker-compose.scale.test.yml down
+  ```
 
 ## Producer Tests:
 
