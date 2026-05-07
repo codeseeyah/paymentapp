@@ -123,7 +123,7 @@ The following points support the durability and reliability of the system.
 ### Idempotency model
 
 - Requests can include `Idempotency-Key` header. If missing, a deterministic key is generated from request payload.
-- The payment API is assumed to work in a way that an existing key returns the existing payment resource (no duplicate logical payment). Although no duplicate requests are obtained by the client in the database, the idempotency key logic is crucial because it ensures that if a worker sucessfully calls the external API and crashes before it set the outbox record as `done`, then when the row is picked up again after the lease timeout is exceeded. Upon making the external call twice, the payment will not be made twice and the row will safely be set as compleeted. Therefore this design provides at-least-once delivery to external processing attempts.
+- The payment API is assumed to work in a way that an existing key returns the existing payment resource (no duplicate logical payment). Although no duplicate requests are obtained by the client in the database, the idempotency key logic is crucial because it ensures that if a worker sucessfully calls the external API and crashes before it set the outbox record as `done`, the payment will not be made twice when the row is picked up again after the lease timeout is exceeded. Upon making the external call twice, the row will safely be set as completed without duplication of payment. Therefore this design provides at-least-once delivery to external processing attempts.
 
 ## AI Tools Usage
 
