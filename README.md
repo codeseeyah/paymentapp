@@ -304,7 +304,7 @@ PAYMENT_COUNT=100 CREATION_DELAY_SECONDS=3 RECOVERY_MAX_WAIT_SECONDS=120 ./perf/
 
 These tests validate restart safety and eventual completion after producer/worker failures. 
 
-On Windows, WSL is needed for using Docker and running `.sh` scripts.
+Note: All development was done using a Linux system. On Windows, WSL is needed for using Docker and Git bash for running `.sh` scripts.
 
 ## Additional References
 
