@@ -56,20 +56,18 @@ public class OutboxWorker {
   }
 
   @Scheduled(fixedDelayString = "${payment.worker.poll-interval-ms:500}")
-  @Transactional
   public void scheduledPoll() {
     if (!workerProperties.isScheduled()) {
       return;
     }
-    processOnce();
-  }
 
-  @Transactional
-  public void processOnce() {
     List<OutboxClaim> claims = claimBatch(workerProperties.getBatchSize());
+
     for (OutboxClaim claim : claims) {
       processClaim(claim);
     }
+
+    processOnce();
   }
 
   @Transactional
