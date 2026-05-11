@@ -29,7 +29,6 @@ WITH seeded_payments AS (
 )
 INSERT INTO outbox (
   payment_id,
-  payload,
   status,
   attempt_count,
   next_attempt_at,
@@ -40,14 +39,6 @@ INSERT INTO outbox (
 )
 SELECT
   seeded_payments.id,
-  jsonb_build_object(
-    'paymentId', seeded_payments.id,
-    'idempotencyKey', seeded_payments.idempotency_key,
-    'amount', seeded_payments.amount,
-    'currency', seeded_payments.currency,
-    'payerId', seeded_payments.payer_id,
-    'payeeId', seeded_payments.payee_id
-  ),
   'pending',
   0,
   now(),

@@ -72,7 +72,7 @@ services:
       - payment-simulator
 
   pgbouncer:
-    image: edoburu/pgbouncer:1.15.0
+    image: edoburu/pgbouncer:latest
     depends_on:
       - postgres
     ports:
@@ -81,7 +81,7 @@ services:
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h postgres -p 5432 -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -h postgres -p 6432 -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
